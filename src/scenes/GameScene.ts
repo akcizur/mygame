@@ -272,6 +272,9 @@ export class GameScene extends Phaser.Scene {
 
     this.landmark(1450, "STARÝ TÁBOR", "campfire");
     this.landmark(4760, "SAMOTÁŘSKÁ CHATA", "campfire");
+    this.add.text(4760, GROUND_Y - 34, "E  VSTOUPIT", {
+      fontFamily: "monospace", fontSize: "5px", color: "#d8c9a3"
+    }).setOrigin(0.5).setDepth(4);
     this.landmark(6200, "VYHLÍDKA", "campfire");
     this.landmark(8250, "RUINY", "ruin");
 
@@ -652,6 +655,16 @@ export class GameScene extends Phaser.Scene {
     for (const obj of this.houseObjects) obj.setVisible(false);
   }
 
+  private enterCabin() {
+    if (this.inHouse) return;
+    this.outsideX = this.player.x;
+    this.saveGame();
+    this.scene.start("InteriorScene", {
+      locationId: "cabin_01",
+      outsideX: this.outsideX
+    });
+  }
+
   private enterHouse() {
     if (this.inHouse) return;
     this.outsideX = this.player.x;
@@ -908,6 +921,11 @@ export class GameScene extends Phaser.Scene {
 
     if (this.player.x > 320 && this.player.x < 350 && Math.abs(this.player.y - 116) < 30) {
       this.enterHouse();
+      return;
+    }
+
+    if (Math.abs(this.player.x - 4760) < 42 && Math.abs(this.player.y - 116) < 30) {
+      this.enterCabin();
       return;
     }
 
