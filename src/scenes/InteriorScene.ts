@@ -33,9 +33,9 @@ export class InteriorScene extends Phaser.Scene {
       floor.refreshBody();
     }
 
-    this.drawCabin(width, floorY, location.palette);
+    this.drawCabin(width, floorY, location.palette, location.id);
 
-    this.player = this.physics.add.sprite(40, 172, "player");
+    this.player = this.physics.add.sprite(location.id === "cabin_01" ? width - 48 : 40, 172, "interior-player");
     this.player.setCollideWorldBounds(true);
     this.player.setSize(8, 18).setOffset(2, 2);
     this.physics.add.collider(this.player, this.platforms);
@@ -67,7 +67,10 @@ export class InteriorScene extends Phaser.Scene {
     this.player.setVelocityX(dir * 72);
     this.player.setFlipX(dir < 0);
 
-    if (Phaser.Input.Keyboard.JustDown(this.keys.e) && this.player.x < 72) this.returnOutside();
+    if (Phaser.Input.Keyboard.JustDown(this.keys.e)) {
+      if (this.player.x < 72 || this.player.x > 468) this.returnOutside();
+      else if (this.player.getData("lootReady")) this.takeCabinLoot();
+    }
   }
 
   private returnOutside() {
@@ -108,7 +111,8 @@ export class InteriorScene extends Phaser.Scene {
   private drawCabin(
     width: number,
     floorY: number,
-    palette: { wall: number; floor: number; accent: number }
+    palette: { wall: number; floor: number; accent: number },
+    locationId: string
   ) {
     const g = this.add.graphics().setDepth(-2);
     g.fillStyle(palette.wall);
@@ -124,12 +128,78 @@ export class InteriorScene extends Phaser.Scene {
     g.fillStyle(0x3a2b25);
     g.fillRect(Math.max(0, width - 42), 116, 24, 44);
 
-    this.add.text(width / 2, 34, "24 LET OPUŠTĚNÁ CHATA", {
+    if (locationId === "cabin_01") {
+      const cabin = this.add.graphics().setDepth(1);
+      cabin.fillStyle(0x2b2925);
+      cabin.fillRect(48, 126, 58, 18);
+      cabin.fillStyle(0x806044);
+      cabin.fillRect(54, 116, 46, 10);
+      cabin.fillStyle(0x25201d);
+      cabin.fillRect(68, 128, 16, 16);
+      cabin.fillStyle(0x9b7a4f);
+      cabin.fillRect(124, 128, 24, 7);
+      cabin.fillRect(128, 121, 16, 7);
+      cabin.fillStyle(0x2c3932);
+      cabin.fillRect(182, 94, 44, 38);
+      cabin.fillStyle(0x68746a);
+      cabin.fillRect(188, 100, 32, 5);
+      cabin.fillStyle(0x514437);
+      cabin.fillRect(300, 119, 48, 25);
+      cabin.fillStyle(0x9a764d);
+      cabin.fillRect(306, 114, 36, 6);
+      cabin.fillStyle(0x6d5140);
+      cabin.fillRect(388, 112, 18, 32);
+      this.add.text(322, 103, "BEDNA", {
+        fontFamily: "monospace", fontSize: "5px", color: "#d7c69d"
+      }).setOrigin(0.5).setDepth(3);
+      this.add.text(205, 86, "STARÉ MAPY", {
+        fontFamily: "monospace", fontSize: "5px", color: "#9caea1"
+      }).setOrigin(0.5).setDepth(3);
+      this.add.text(76, 108, "KRB", {
+        fontFamily: "monospace", fontSize: "5px", color: "#c18b51"
+      }).setOrigin(0.5).setDepth(3);
+    }
+
+    this.add.text(width / 2, 34, locationId === "cabin_01" ? "CHATA • 24 LET OPUŠTĚNÁ" : "24 LET OPUŠTĚNÁ CHATA", {
       fontFamily: "monospace", fontSize: "7px", color: "#e8d8a8"
     }).setOrigin(0.5).setDepth(3);
 
-    this.add.text(42, floorY - 18, "E  VÝCHOD", {
+    this.add.text(locationId === "cabin_01" ? width - 42 : 42, floorY - 18, "E  VÝCHOD", {
       fontFamily: "monospace", fontSize: "5px", color: "#d8c9a3"
     }).setOrigin(0.5).setDepth(3);
+
+    if (locationId === "cabin_01") {
+      this.add.text(322, 96, "E  PROHLEDAT BEDNU", {
+        fontFamily: "monospace", fontSize: "5px", color: "#d8c9a3"
+      }).setOrigin(0.5).setDepth(3);
+      this.player?.setData("lootReady", true);
+    }
+  }
+
+  private takeCabinLoot() {
+    const raw = localStorage.getItem("wildlands-cabin-01-v1");
+    if (raw === "1") {
+      this.showCabinMessage("BEDNA JE PRÁZDNÁ.");
+      return;
+    }
+    try {
+      const save = localStorage.getItem("wildlands-save-v1");
+      const state = save ? JSON.parse(save) : {};
+      state.wood = (Number(state.wood) || 0) + 4;
+      state.stone = (Number(state.stone) || 0) + 2;
+      localStorage.setItem("wildlands-save-v1", JSON.stringify(state));
+      localStorage.setItem("wildlands-cabin-01-v1", "1");
+      this.showCabinMessage("BEDNA • +4 DŘEVA • +2 KAMENE");
+    } catch {
+      this.showCabinMessage("BEDNU SE NEPODAŘILO OTEVŘÍT.");
+    }
+  }
+
+  private showCabinMessage(message: string) {
+    const text = this.add.text(260, 58, message, {
+      fontFamily: "monospace", fontSize: "6px", color: "#e4d5ae",
+      backgroundColor: "#172027", padding: { x: 4, y: 3 }
+    }).setScrollFactor(0).setDepth(100);
+    this.time.delayedCall(2200, () => text.destroy());
   }
 }
