@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { createPixelTexture, drawYear24Survivor } from "../render/pixelArt";
+import { createPixelTexture, drawYear24Survivor, registerYear24Tiles } from "../render/pixelArt";
 import { getLocation } from "../world/world";
 
 type InteriorData = {
@@ -89,6 +89,7 @@ export class InteriorScene extends Phaser.Scene {
   }
 
   private createTextures() {
+    registerYear24Tiles(this);
     const g = this.make.graphics({ x: 0, y: 0, add: false });
 
     g.fillStyle(0x73543d);
