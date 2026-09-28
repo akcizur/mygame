@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 
 const WORLD_W = 9000;
+const EDIT_KEY = "wildlands-world-v1";
 const WORLD_H = 180;
 const GROUND_Y = 142;
 const HOUSE = { left: 72, right: 345 };
@@ -33,6 +34,8 @@ export class GameScene extends Phaser.Scene {
   private axe = false;
   private pickaxe = false;
   private torch = false;
+  private worldEdits: Array<{ id: string; type: "campfire" | "wall" | "bridge"; x: number; y: number }> = [];
+  private clueFound = false;
   private day = 0;
   private clock = 0.30;
   private facing = 1;
@@ -55,7 +58,10 @@ export class GameScene extends Phaser.Scene {
     this.createWorld();
     this.createPlayer();
     this.loadGame();
+    this.loadWorldEdits();
     this.applyCollectedResources();
+    this.applyWorldEdits();
+    this.createStoryClue();
     this.createHUD();
     this.createTouchControls();
     this.createDiaryUI();
@@ -68,6 +74,8 @@ export class GameScene extends Phaser.Scene {
       w: this.input.keyboard!.addKey("W"),
       space: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
       i: this.input.keyboard!.addKey("I"),
+      b: this.input.keyboard!.addKey("B"),
+      r: this.input.keyboard!.addKey("R"),
       e: this.input.keyboard!.addKey("E"),
       shift: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT)
     };
@@ -606,6 +614,8 @@ export class GameScene extends Phaser.Scene {
     }
 
     if (Phaser.Input.Keyboard.JustDown(this.keys.i)) this.toggleInventory();
+    if (Phaser.Input.Keyboard.JustDown(this.keys.b)) this.buildAtPlayer();
+    if (Phaser.Input.Keyboard.JustDown(this.keys.r)) this.removeWorldEdit();
 
     if (Phaser.Input.Keyboard.JustDown(this.keys.e) || this.player.getData("action")) {
       this.player.setData("action", false);
@@ -642,6 +652,11 @@ export class GameScene extends Phaser.Scene {
   private interact() {
     if (this.actionCooldown > 0) return;
     this.actionCooldown = 0.3;
+
+    if (this.player.x > 8200 && this.player.x < 8300 && !this.clueFound) {
+      this.findStoryClue();
+      return;
+    }
 
     if (Math.abs(this.player.x - 257) < 34 && Math.abs(this.player.y - 116) < 28) {
       this.openDiary();
@@ -700,6 +715,72 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.showMessage("E: SBÍRAT • JÍST • ODPOČÍVAT • DENÍK", 1400);
+  }
+
+  private createStoryClue() {
+    if (this.clueFound) return;
+    const clue = this.add.rectangle(8264, GROUND_Y - 8, 10, 7, 0xb8a56b).setDepth(3);
+    clue.setData("storyClue", true);
+    clue.setName("story-clue");
+  }
+
+  private findStoryClue() {
+    this.clueFound = true;
+    this.discoveries.add("STOPA 01");
+    const entries = this.loadDiary();
+    entries.push({ day: this.day + 1, text: "V ruinách jsem našel starý kovový štítek. Je na něm směrová značka k severu. Tohle místo nebylo opuštěné náhodou.", createdAt: new Date().toISOString() });
+    localStorage.setItem("wildlands-diary-v1", JSON.stringify(entries.slice(-30)));
+    this.saveGame();
+    this.children.getByName("story-clue")?.destroy();
+    this.showMessage("STOPA 01 • STARÝ ŠTÍTEK • DENÍK AKTUALIZOVÁN", 3200);
+  }
+
+  private buildAtPlayer() {
+    if (this.inventoryOpen || this.diaryOpen) return;
+    if (this.wood < 2 || this.stone < 1) return this.showMessage("STAVBA • POTŘEBUJEŠ 2 DŘEVA + 1 KÁMEN.", 1700);
+    const x = Math.round((this.player.x + this.facing * 24) / 16) * 16;
+    const y = GROUND_Y - 12;
+    const id = "wall-" + x + "-" + y;
+    if (this.worldEdits.some(e => e.id === id)) return this.showMessage("TADY UŽ NĚCO STOJÍ.", 1200);
+    this.wood -= 2; this.stone -= 1;
+    this.worldEdits.push({ id, type: "wall", x, y });
+    this.add.image(x, y, "house-wall").setScale(0.22).setDepth(2).setName(id);
+    this.saveGame();
+    this.saveWorldEdits();
+    this.showMessage("POSTAVENO • B • 2 DŘEVA + 1 KÁMEN", 1800);
+  }
+
+  private removeWorldEdit() {
+    const target = this.worldEdits
+      .filter(e => Math.abs(e.x - this.player.x) < 42)
+      .sort((a, b) => Math.abs(a.x - this.player.x) - Math.abs(b.x - this.player.x))[0];
+    if (!target) return this.showMessage("V DOSAHU NENÍ TVOJE STAVBA.", 1300);
+    this.worldEdits = this.worldEdits.filter(e => e.id !== target.id);
+    this.children.getByName(target.id)?.destroy();
+    this.wood += 1;
+    this.saveGame();
+    this.saveWorldEdits();
+    this.showMessage("ODSTRANĚNO • 1 DŘEVO SE VRÁTILO.", 1500);
+  }
+
+  private applyWorldEdits() {
+    for (const edit of this.worldEdits) {
+      if (this.children.getByName(edit.id)) continue;
+      const texture = edit.type === "wall" ? "house-wall" : "campfire";
+      const obj = this.add.image(edit.x, edit.y, texture).setDepth(2).setName(edit.id);
+      if (edit.type === "wall") obj.setScale(0.22);
+    }
+  }
+
+  private saveWorldEdits() {
+    try { localStorage.setItem(EDIT_KEY, JSON.stringify(this.worldEdits)); } catch {}
+  }
+
+  private loadWorldEdits() {
+    try {
+      const raw = localStorage.getItem(EDIT_KEY);
+      if (raw) this.worldEdits = JSON.parse(raw);
+    } catch { this.worldEdits = []; }
   }
 
   private sleepAtHome() {
@@ -783,6 +864,7 @@ export class GameScene extends Phaser.Scene {
       axe: this.axe,
       pickaxe: this.pickaxe,
       torch: this.torch,
+      clueFound: this.clueFound,
       playerX: this.player.x,
       playerY: this.player.y
     };
@@ -809,6 +891,7 @@ export class GameScene extends Phaser.Scene {
       this.axe = state.axe === true;
       this.pickaxe = state.pickaxe === true;
       this.torch = state.torch === true;
+      this.clueFound = state.clueFound === true;
       if (Number.isFinite(state.playerX)) this.player.x = Phaser.Math.Clamp(state.playerX, 158, WORLD_W - 20);
       if (Number.isFinite(state.playerY)) this.player.y = Phaser.Math.Clamp(state.playerY, 40, GROUND_Y);
     } catch {}
@@ -827,7 +910,8 @@ export class GameScene extends Phaser.Scene {
       "HUN " + this.bar(this.hunger) + " " + Math.ceil(this.hunger) + "\n" +
       "STA " + this.bar(this.stamina) + " " + Math.ceil(this.stamina) + "\n" +
       "DEN " + (this.day + 1) + "  " + phase + "  " + this.currentZone + "\n" +
-      "WOOD " + this.wood + "  BERRY " + this.berries + "  STONE " + this.stone
+      "WOOD " + this.wood + "  BERRY " + this.berries + "  STONE " + this.stone + "\n" +
+      "B STAVĚT  •  R ODSTRANIT  •  E AKCE"
     );
     this.messageText.setText(this.message).setVisible(this.messageUntil > Date.now());
   }
