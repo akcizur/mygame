@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { createPixelTexture, drawYear24Survivor } from "../render/pixelArt";
+import { createPixelTexture, drawYear24Survivor, registerYear24Tiles } from "../render/pixelArt";
 
 const WORLD_W = 9600;
 const EDIT_KEY = "wildlands-world-v1";
@@ -102,6 +102,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private createTextures() {
+    registerYear24Tiles(this);
     const g = this.make.graphics({ x: 0, y: 0, add: false });
     const texture = (key: string, w: number, h: number, draw: () => void) => {
       g.clear();
