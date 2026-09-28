@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { GameScene } from "./scenes/GameScene";
+import { InteriorScene } from "./scenes/InteriorScene";
 
 const GAME_WIDTH = 320;
 const GAME_HEIGHT = 240;
@@ -29,7 +30,7 @@ const config: Phaser.Types.Core.GameConfig = {
     pixelArt: true,
     antialias: false
   },
-  scene: [GameScene]
+  scene: [GameScene, InteriorScene]
 };
 
 new Phaser.Game(config);
