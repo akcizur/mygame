@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 
-const WORLD_W = 9000;
+const WORLD_W = 9600;
 const EDIT_KEY = "wildlands-world-v1";
 const WORLD_H = 180;
 const GROUND_Y = 142;
@@ -36,6 +36,9 @@ export class GameScene extends Phaser.Scene {
   private torch = false;
   private worldEdits: Array<{ id: string; type: "campfire" | "wall" | "bridge"; x: number; y: number }> = [];
   private clueFound = false;
+  private inHouse = false;
+  private outsideX = 158;
+  private houseObjects!: Phaser.GameObjects.GameObject[];
   private day = 0;
   private clock = 0.30;
   private facing = 1;
@@ -62,6 +65,7 @@ export class GameScene extends Phaser.Scene {
     this.applyCollectedResources();
     this.applyWorldEdits();
     this.createStoryClue();
+    this.createHouseInterior();
     this.createHUD();
     this.createTouchControls();
     this.createDiaryUI();
@@ -432,7 +436,7 @@ export class GameScene extends Phaser.Scene {
     body.id = "wildlands-inventory-body";
     body.style.cssText = "font-size:12px;line-height:1.8;color:#cbd4d4;";
     const hint = document.createElement("div");
-    hint.textContent = "I / klepnutí na VÝBAVA — zavřít";
+    hint.textContent = "I / klepnutí na VÝBAVA — zavřít • Crafting: pracovní stůl";
     hint.style.cssText = "margin-top:8px;font-size:9px;color:#7f8d91;";
     card.append(title, body, hint);
     root.appendChild(card);
@@ -441,7 +445,63 @@ export class GameScene extends Phaser.Scene {
     this.inventoryOverlay = root;
   }
 
+  private createHouseInterior() {
+    this.houseObjects = [];
+    const floor = this.platforms.create(9300, GROUND_Y + 22, "ground") as Phaser.Physics.Arcade.Sprite;
+    floor.setDisplaySize(620, 44).refreshBody();
+    const back = this.add.rectangle(9300, 82, 620, 120, 0x2b2421).setDepth(-2);
+    const wall = this.add.rectangle(9300, 54, 620, 64, 0x59463a).setDepth(-1);
+    const floorTop = this.add.rectangle(9300, 132, 620, 20, 0x73543d).setDepth(0);
+    const window = this.add.rectangle(9160, 68, 62, 34, 0x607d7b).setStrokeStyle(2, 0x342b27).setDepth(1);
+    const bed = this.add.image(9020, 116, "bed").setScale(1.5).setDepth(2);
+    const desk = this.add.image(9250, 116, "desk").setScale(1.5).setDepth(2);
+    const bench = this.add.rectangle(9360, 116, 42, 12, 0x68462f).setDepth(2).setStrokeStyle(1, 0xb08a5b);
+    const chest = this.add.rectangle(9440, 119, 34, 18, 0x4d392c).setDepth(2).setStrokeStyle(1, 0x9d774f);
+    const lamp = this.add.circle(9550, 72, 10, 0xd6b15c, 0.9).setDepth(2);
+    const door = this.add.rectangle(9480, 112, 22, 40, 0x3a2b25).setDepth(2);
+    const labels = [
+      this.add.text(9300, 22, "DŮM • BEZPEČNÁ ZÓNA", {fontFamily:"monospace",fontSize:"8px",color:"#e4d5ae"}).setOrigin(.5).setDepth(3),
+      this.add.text(9020, 99, "POSTEL", {fontFamily:"monospace",fontSize:"5px",color:"#d8c9a3"}).setOrigin(.5).setDepth(3),
+      this.add.text(9250, 99, "DENÍK", {fontFamily:"monospace",fontSize:"5px",color:"#d8c9a3"}).setOrigin(.5).setDepth(3),
+      this.add.text(9360, 101, "PRACOVNÍ STŮL", {fontFamily:"monospace",fontSize:"5px",color:"#d8c9a3"}).setOrigin(.5).setDepth(3),
+      this.add.text(9440, 99, "TRUHLA", {fontFamily:"monospace",fontSize:"5px",color:"#d8c9a3"}).setOrigin(.5).setDepth(3),
+      this.add.text(9480, 88, "DVEŘE", {fontFamily:"monospace",fontSize:"5px",color:"#d8c9a3"}).setOrigin(.5).setDepth(3)
+    ];
+    this.houseObjects.push(floor, back, wall, floorTop, window, bed, desk, bench, chest, lamp, door, ...labels);
+    for (const obj of this.houseObjects) obj.setData?.("house", true);
+    for (const obj of this.houseObjects) obj.setVisible(false);
+  }
+
+  private enterHouse() {
+    if (this.inHouse) return;
+    this.outsideX = this.player.x;
+    this.inHouse = true;
+    this.currentZone = "DŮM";
+    this.player.setPosition(9480, 116);
+    this.player.setVelocity(0, 0);
+    this.cameras.main.setBounds(9000, 0, 600, WORLD_H);
+    for (const obj of this.houseObjects) obj.setVisible(true);
+    this.showMessage("DOMOV • UVNITŘ JSI V BEZPEČÍ.", 2200);
+    this.saveGame();
+  }
+
+  private exitHouse() {
+    this.inHouse = false;
+    this.player.setPosition(Math.max(HOUSE.right + 12, this.outsideX), 116);
+    this.player.setVelocity(0, 0);
+    this.cameras.main.setBounds(0, 0, WORLD_W, WORLD_H);
+    for (const obj of this.houseObjects) obj.setVisible(false);
+    this.currentZone = "DŮM";
+    this.showMessage("VÝPRAVA • SVĚT ČEKÁ.", 1600);
+    this.saveGame();
+  }
+
+  private nearWorkbench() {
+    return this.inHouse && Math.abs(this.player.x - 9360) < 60 && Math.abs(this.player.y - 116) < 34;
+  }
+
   private craftTool(tool: "axe" | "pickaxe" | "torch") {
+    if (!this.nearWorkbench()) return this.showMessage("CRAFTING JE MOŽNÝ JEN U PRACOVNÍHO STOLU.", 1800);
     if (tool === "axe") {
       if (this.axe) return this.showMessage("SEKERA UŽ JE VYROBENA.", 1200);
       if (this.wood < 5 || this.stone < 2) return this.showMessage("SEKERA • 5 DŘEVA + 2 KAMENE.", 1500);
@@ -596,7 +656,7 @@ export class GameScene extends Phaser.Scene {
     if (this.cursors.left.isDown || this.keys.a.isDown || this.player.getData("left")) dir--;
     if (this.cursors.right.isDown || this.keys.d.isDown || this.player.getData("right")) dir++;
 
-    const sprint = this.keys.shift.isDown && this.stamina > 1;
+    const sprint = !this.inHouse && this.keys.shift.isDown && this.stamina > 1;
     const speed = sprint ? 125 : 82;
     if (dir) {
       this.facing = dir;
@@ -625,6 +685,12 @@ export class GameScene extends Phaser.Scene {
     if (this.hunger <= 0) this.health = Math.max(0, this.health - dt * 2);
     if (this.health <= 0) this.respawn();
 
+    if (this.inHouse) {
+      this.updateLighting();
+      this.updateHUD();
+      return;
+    }
+
     this.creatures.children.each(obj => {
       const e = obj as Phaser.Physics.Arcade.Sprite;
       const origin = e.getData("origin") as number;
@@ -652,6 +718,19 @@ export class GameScene extends Phaser.Scene {
   private interact() {
     if (this.actionCooldown > 0) return;
     this.actionCooldown = 0.3;
+
+    if (this.inHouse) {
+      if (Math.abs(this.player.x - 9480) < 44) { this.exitHouse(); return; }
+      if (Math.abs(this.player.x - 9250) < 44 && Math.abs(this.player.y - 116) < 28) { this.openDiary(); return; }
+      if (Math.abs(this.player.x - 9020) < 44 && Math.abs(this.player.y - 116) < 28) { this.sleepAtHome(); return; }
+      if (Math.abs(this.player.x - 9360) < 44 && Math.abs(this.player.y - 116) < 28) { this.showMessage("PRACOVNÍ STŮL • CRAFTING JE PŘIPRAVEN.", 1600); return; }
+      return;
+    }
+
+    if (this.player.x > 320 && this.player.x < 350 && Math.abs(this.player.y - 116) < 30) {
+      this.enterHouse();
+      return;
+    }
 
     if (this.player.x > 8200 && this.player.x < 8300 && !this.clueFound) {
       this.findStoryClue();
@@ -802,6 +881,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private updateZoneAndDiscoveries() {
+    if (this.inHouse) { this.currentZone = "DŮM"; return; }
     const x = this.player.x;
     const nextZone =
       x < HOUSE.right ? "DŮM" :
@@ -845,6 +925,9 @@ export class GameScene extends Phaser.Scene {
     this.player.setPosition(158, 116);
     this.player.setVelocity(0, 0);
     this.currentZone = "DŮM";
+    this.inHouse = false;
+    for (const obj of this.houseObjects ?? []) obj.setVisible(false);
+    this.cameras.main.setBounds(0, 0, WORLD_W, WORLD_H);
     this.saveGame();
     this.showMessage("ZKOLABOVAL JSI • PROBOUZÍŠ SE DOMA.", 2400);
   }
@@ -866,7 +949,10 @@ export class GameScene extends Phaser.Scene {
       torch: this.torch,
       clueFound: this.clueFound,
       playerX: this.player.x,
-      playerY: this.player.y
+      playerY: this.player.y,
+      inHouse: this.inHouse,
+      outsideX: this.outsideX,
+ this.player.y
     };
     try {
       localStorage.setItem(this.saveKey, JSON.stringify(state));
@@ -892,6 +978,8 @@ export class GameScene extends Phaser.Scene {
       this.pickaxe = state.pickaxe === true;
       this.torch = state.torch === true;
       this.clueFound = state.clueFound === true;
+      this.inHouse = state.inHouse === true;
+      this.outsideX = Number.isFinite(state.outsideX) ? state.outsideX : 158;
       if (Number.isFinite(state.playerX)) this.player.x = Phaser.Math.Clamp(state.playerX, 158, WORLD_W - 20);
       if (Number.isFinite(state.playerY)) this.player.y = Phaser.Math.Clamp(state.playerY, 40, GROUND_Y);
     } catch {}
