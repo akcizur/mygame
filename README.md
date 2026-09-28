@@ -20,3 +20,16 @@ npm run dev
 npm run build
 
 Every push to main runs the production build and deploys dist/ to GitHub Pages through GitHub Actions.
+
+
+## Nový gameplay loop
+
+Začínáš jako muž ve vlastním domě. Dům funguje jako bezpečná základna se stolem pro psaní deníku a postelí pro posun na další den.
+
+Hlavní smyčka:
+
+`dům → výprava → sběr / objev → návrat → deník → spánek → další den`
+
+Deník ukládá vlastní poznámky i automatické záznamy významných objevů do localStorage, takže zůstávají i po obnovení stránky.
+
+Detailní návrh světa a další roadmapa je v [docs/GAMEPLAY.md](docs/GAMEPLAY.md).
