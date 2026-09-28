@@ -33,3 +33,8 @@ Hlavní smyčka:
 Deník ukládá vlastní poznámky i automatické záznamy významných objevů do localStorage, takže zůstávají i po obnovení stránky. Inventář je dostupný přes `I` i mobilní tlačítko `INV`; sebrané suroviny se ukládají jako persistentní stav světa.
 
 Detailní návrh světa a další roadmapa je v [docs/GAMEPLAY.md](docs/GAMEPLAY.md).
+
+
+## Persistent world
+
+The world is intended to be editable, not static. Collected resources persist, and the first build/remove layer is available with `B` and `R`. This is the foundation for later terrain changes, structures, paths, bridges, shelters and other player-created changes.
