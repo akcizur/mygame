@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { createPixelTexture, drawYear24Survivor } from "../render/pixelArt";
 
 const WORLD_W = 9600;
 const EDIT_KEY = "wildlands-world-v1";
@@ -114,14 +115,7 @@ export class GameScene extends Phaser.Scene {
       g.fillStyle(0x203127); g.fillRect(4, 9, 3, 3); g.fillRect(21, 17, 4, 3); g.fillRect(11, 29, 3, 5);
     });
 
-    texture("player", 12, 20, () => {
-      g.fillStyle(0x172027); g.fillRect(3, 0, 7, 8);
-      g.fillStyle(0xd9b27b); g.fillRect(4, 1, 5, 6);
-      g.fillStyle(0x6f4631); g.fillRect(3, 7, 7, 7);
-      g.fillStyle(0x354c3e); g.fillRect(2, 8, 8, 6);
-      g.fillStyle(0x26313a); g.fillRect(2, 14, 3, 6); g.fillRect(7, 14, 3, 6);
-      g.fillStyle(0xe6d2a4); g.fillRect(9, 10, 3, 3);
-    });
+    createPixelTexture(this, "player", 12, 20, drawYear24Survivor);
 
     texture("house-wall", 110, 70, () => {
       g.fillStyle(0x49392d); g.fillRect(2, 16, 106, 54);
