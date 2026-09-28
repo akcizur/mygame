@@ -211,8 +211,40 @@ export class GameScene extends Phaser.Scene {
     g.destroy();
   }
 
+  private createPixelBackdrop() {
+    // Reusable 8-bit layer bands: deliberately coarse and palette-limited.
+    const g = this.add.graphics().setDepth(-18);
+    const bands: Array<[number, number, number]> = [
+      [0, 46, 0x162129],
+      [46, 78, 0x1d3037],
+      [78, 106, 0x243b3d],
+      [106, 126, 0x2b433d]
+    ];
+    for (const [y, h, color] of bands) {
+      g.fillStyle(color);
+      g.fillRect(0, y, WORLD_W, h);
+    }
+
+    // Repeated pixel cloud/atmosphere blocks; no gradients, no smoothing.
+    g.fillStyle(0x2f4747);
+    for (let x = 120; x < WORLD_W; x += 256) {
+      const y = 58 + Math.floor(this.noise(x * 0.13) * 7);
+      g.fillRect(x, y, 48, 3);
+      g.fillRect(x + 12, y - 3, 24, 3);
+    }
+
+    // Distant utility poles establish scale across the continuous world.
+    g.fillStyle(0x35433f);
+    for (let x = 820; x < WORLD_W; x += 410) {
+      const y = 94 + Math.floor(this.noise(x * 0.19) * 5);
+      g.fillRect(x, y, 3, 32);
+      g.fillRect(x - 7, y + 3, 17, 2);
+    }
+  }
+
   private createWorld() {
     this.add.rectangle(WORLD_W / 2, 90, WORLD_W, WORLD_H, 0x162129).setDepth(-20);
+    this.createPixelBackdrop();
     const sky = this.add.graphics().setDepth(-19);
     sky.fillStyle(0x162129); sky.fillRect(0, 0, WORLD_W, 180);
     sky.fillStyle(0x1d3037); sky.fillRect(0, 54, WORLD_W, 40);
