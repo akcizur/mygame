@@ -66,6 +66,10 @@ export class GameScene extends Phaser.Scene {
     this.applyWorldEdits();
     this.createStoryClue();
     this.createHouseInterior();
+    if (this.inHouse) {
+      for (const obj of this.houseObjects) obj.setVisible(true);
+      this.cameras.main.setBounds(9000, 0, 600, WORLD_H);
+    }
     this.createHUD();
     this.createTouchControls();
     this.createDiaryUI();
@@ -874,7 +878,11 @@ export class GameScene extends Phaser.Scene {
     this.health = Math.min(100, this.health + 32);
     this.hunger = Math.min(100, this.hunger + 38);
     this.stamina = 100;
-    this.player.setPosition(158, 116);
+    if (this.inHouse) {
+      this.player.setPosition(9020, 116);
+    } else {
+      this.player.setPosition(158, 116);
+    }
     this.player.setVelocity(0, 0);
     this.saveGame();
     this.showMessage("RÁNO • DEN " + (this.day + 1) + " • DOMA JSI V BEZPEČÍ.", 2600);
