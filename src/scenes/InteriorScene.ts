@@ -103,17 +103,6 @@ export class InteriorScene extends Phaser.Scene {
     g.generateTexture("interior-player", 12, 20);
     g.destroy();
 
-    this.playerTextureAlias();
-  }
-
-  private playerTextureAlias() {
-    if (this.textures.exists("player")) {
-      // GameScene's canonical survivor texture is reused when available.
-      return;
-    }
-    // InteriorScene can also run independently.
-    const source = this.textures.get("interior-player");
-    this.textures.addCanvas("player", source.source[0].image as HTMLCanvasElement);
   }
 
   private drawCabin(
