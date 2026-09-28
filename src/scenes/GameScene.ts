@@ -30,6 +30,9 @@ export class GameScene extends Phaser.Scene {
   private wood = 0;
   private berries = 0;
   private stone = 0;
+  private axe = false;
+  private pickaxe = false;
+  private torch = false;
   private day = 0;
   private clock = 0.30;
   private facing = 1;
@@ -430,6 +433,53 @@ export class GameScene extends Phaser.Scene {
     this.inventoryOverlay = root;
   }
 
+  private craftTool(tool: "axe" | "pickaxe" | "torch") {
+    if (tool === "axe") {
+      if (this.axe) return this.showMessage("SEKERA UŽ JE VYROBENA.", 1200);
+      if (this.wood < 5 || this.stone < 2) return this.showMessage("SEKERA • 5 DŘEVA + 2 KAMENE.", 1500);
+      this.wood -= 5; this.stone -= 2; this.axe = true;
+    } else if (tool === "pickaxe") {
+      if (this.pickaxe) return this.showMessage("KRUMPÁČ UŽ JE VYROBENÝ.", 1200);
+      if (this.wood < 3 || this.stone < 6) return this.showMessage("KRUMPÁČ • 3 DŘEVA + 6 KAMENE.", 1500);
+      this.wood -= 3; this.stone -= 6; this.pickaxe = true;
+    } else {
+      if (this.torch) return this.showMessage("POCHODEŇ UŽ JE PŘIPRAVENÁ.", 1200);
+      if (this.wood < 2) return this.showMessage("POCHODEŇ • 2 DŘEVA.", 1400);
+      this.wood -= 2; this.torch = true;
+    }
+    this.saveGame();
+    this.updateInventoryBody();
+    this.showMessage("VYROBENO • " + tool.toUpperCase(), 1500);
+  }
+
+  private updateInventoryBody() {
+    if (!this.inventoryOverlay) return;
+    const body = this.inventoryOverlay.querySelector("#wildlands-inventory-body");
+    if (!body) return;
+    body.innerHTML = "";
+    const summary = document.createElement("div");
+    summary.innerHTML = "WOOD <b>" + this.wood + "</b> &nbsp; BOBULE <b>" + this.berries + "</b> &nbsp; KÁMEN <b>" + this.stone + "</b>";
+    summary.style.cssText = "padding-bottom:8px;";
+    body.appendChild(summary);
+
+    const addRow = (name: string, owned: boolean, cost: string, tool: "axe" | "pickaxe" | "torch") => {
+      const row = document.createElement("div");
+      row.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid #243036;";
+      const info = document.createElement("div");
+      info.innerHTML = "<div>" + name + " <span style='color:#d6c78b'>" + (owned ? "VYROBENO" : "NENÍ") + "</span></div><div style='font-size:9px;color:#7f8d91'>" + cost + "</div>";
+      const b = document.createElement("button");
+      b.textContent = owned ? "HOTOVO" : "VYROBIT";
+      b.disabled = owned;
+      b.style.cssText = "padding:7px 9px;background:#172027;color:#e6eee8;border:1px solid #52636a;font:10px monospace;";
+      b.onclick = () => this.craftTool(tool);
+      row.append(info, b);
+      body.appendChild(row);
+    };
+    addRow("SEKERA", this.axe, "5 dřeva + 2 kamene", "axe");
+    addRow("KRUMPÁČ", this.pickaxe, "3 dřeva + 6 kamene", "pickaxe");
+    addRow("POCHODEŇ", this.torch, "2 dřeva", "torch");
+  }
+
   private toggleInventory() {
     if (this.inventoryOpen) this.closeInventory(); else this.openInventory();
   }
@@ -439,8 +489,7 @@ export class GameScene extends Phaser.Scene {
     this.inventoryOpen = true;
     this.player.setVelocity(0, 0);
     this.inventoryOverlay.style.display = "flex";
-    const body = this.inventoryOverlay.querySelector("#wildlands-inventory-body");
-    if (body) body.innerHTML = "<div>WOOD &nbsp; " + this.wood + "</div><div>BOBULE &nbsp; " + this.berries + "</div><div>KÁMEN &nbsp; " + this.stone + "</div><div style='margin-top:8px;color:#d6c78b'>NÁSTROJE &nbsp; zatím žádné</div><div>CRAFTING &nbsp; odemkne pracovní stůl</div>";
+    this.updateInventoryBody();
   }
 
   private closeInventory() {
@@ -620,6 +669,8 @@ export class GameScene extends Phaser.Scene {
     if (nearest) {
       const r = nearest;
       const type = r.getData("resource") as string;
+      if (type === "wood" && r.x > 1900 && !this.axe) return this.showMessage("TENTO STROM JE PŘÍLIŠ SILNÝ • POTŘEBUJEŠ SEKERU.", 1700);
+      if (type === "stone" && r.x > 6900 && !this.pickaxe) return this.showMessage("SKÁLA JE TVRDÁ • POTŘEBUJEŠ KRUMPÁČ.", 1700);
       const amount = r.getData("amount") as number;
       if (type === "wood") this.wood += amount;
       if (type === "berry") this.berries += amount;
@@ -729,6 +780,9 @@ export class GameScene extends Phaser.Scene {
       stone: this.stone,
       discoveries: Array.from(this.discoveries),
       collectedResources: Array.from(this.collectedResources),
+      axe: this.axe,
+      pickaxe: this.pickaxe,
+      torch: this.torch,
       playerX: this.player.x,
       playerY: this.player.y
     };
@@ -752,6 +806,9 @@ export class GameScene extends Phaser.Scene {
       this.stone = Number.isFinite(state.stone) ? state.stone : 0;
       this.discoveries = new Set(Array.isArray(state.discoveries) ? state.discoveries : []);
       this.collectedResources = new Set(Array.isArray(state.collectedResources) ? state.collectedResources : []);
+      this.axe = state.axe === true;
+      this.pickaxe = state.pickaxe === true;
+      this.torch = state.torch === true;
       if (Number.isFinite(state.playerX)) this.player.x = Phaser.Math.Clamp(state.playerX, 158, WORLD_W - 20);
       if (Number.isFinite(state.playerY)) this.player.y = Phaser.Math.Clamp(state.playerY, 40, GROUND_Y);
     } catch {}
