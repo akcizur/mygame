@@ -6,7 +6,9 @@ const WORLD_H = 180;
 const GROUND_Y = 142;
 const HOUSE = { left: 72, right: 345 };
 
-type WorldEdit = { id: string; type: "campfire" | "wall" | "bridge" | "stump"; x: number; y: number; width?: number };\n\ntype DiaryEntry = {
+type WorldEdit = { id: string; type: "campfire" | "wall" | "bridge" | "stump"; x: number; y: number; width?: number };
+
+type DiaryEntry = {
   day: number;
   text: string;
   createdAt: string;
@@ -740,7 +742,8 @@ export class GameScene extends Phaser.Scene {
       if (Math.abs(this.player.x - 9480) < 44) { this.exitHouse(); return; }
       if (Math.abs(this.player.x - 9250) < 44 && Math.abs(this.player.y - 116) < 28) { this.openDiary(); return; }
       if (Math.abs(this.player.x - 9020) < 44 && Math.abs(this.player.y - 116) < 28) { this.sleepAtHome(); return; }
-      if (Math.abs(this.player.x - 9360) < 44 && Math.abs(this.player.y - 116) < 28) { this.showMessage("PRACOVNÍ STŮL • CRAFTING JE PŘIPRAVEN.", 1600); return; }\n      if (Math.abs(this.player.x - 9440) < 44 && Math.abs(this.player.y - 116) < 28) { this.useChest(this.keys.shift.isDown); return; }
+      if (Math.abs(this.player.x - 9360) < 44 && Math.abs(this.player.y - 116) < 28) { this.showMessage("PRACOVNÍ STŮL • CRAFTING JE PŘIPRAVEN.", 1600); return; }
+      if (Math.abs(this.player.x - 9440) < 44 && Math.abs(this.player.y - 116) < 28) { this.useChest(this.keys.shift.isDown); return; }
       return;
     }
 
