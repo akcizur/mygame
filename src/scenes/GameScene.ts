@@ -242,7 +242,6 @@ export class GameScene extends Phaser.Scene {
       enemy.setVelocityX((enemy.getData("dir") as number) * 18);
     }
 
-    this.physics.add.collider(this.player, this.platforms);
     this.physics.add.collider(this.creatures, this.platforms);
   }
 
@@ -276,6 +275,7 @@ export class GameScene extends Phaser.Scene {
     this.player.setCollideWorldBounds(true);
     this.player.setSize(8, 18).setOffset(2, 2);
     this.player.setDepth(5);
+    this.physics.add.collider(this.player, this.platforms);
   }
 
   private createHUD() {
