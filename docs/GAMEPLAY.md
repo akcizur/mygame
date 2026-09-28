@@ -96,7 +96,10 @@ Priorita je zachovat jednoduchou smyčku: **dům → výprava → objev → den�
 - [x] Crafting
 - [ ] Interiér domu jako skutečná samostatná lokace
 - [x] Základní úpravy světa (stavění / odstraňování)
-- [ ] Interiér domu jako skutečná samostatná lokace
+- [x] Persistentní pařezy po pokácených stromech
+- [x] Opravitelný most přes řeku
+- [x] Persistentní truhla v domě
+- [ ] Interiér domu jako samostatná Phaser Scene
 - [ ] Rozšíření domu
 - [x] První příběhová stopa v ruinách
 - [ ] Počasí
@@ -132,10 +135,12 @@ Svět není pouze mapa, kterou hráč prochází. Je navržen jako persistentní
 
 První vrstva úprav je záměrně jednoduchá:
 
-- `B` — postavit objekt před hráčem
+- `B` — stavět; u řeky opraví most
 - `R` — odstranit vlastní objekt v dosahu
-- změna se uloží a přežije reload
-- později lze stejný systém rozšířit na mosty, cesty, ploty, úkryty, pracovní stanice, světla, farmy a další objekty
+- pokácený strom zanechá pařez
+- změny se uloží a přežijí reload
+- truhla v domě funguje jako persistentní sklad (`E` uložit, `Shift+E` vybrat)
+- stejný `WorldEdit` model je připravený pro cesty, ploty, úkryty, pracovní stanice, světla, farmy a další objekty
 
 Architektura má směřovat k modelu **world state → edit → persistence → render**, nikoli k jednorázově nakreslené mapě.
 
