@@ -188,7 +188,19 @@ export class GameScene extends Phaser.Scene {
       g.fillStyle(0x2e3637); g.fillRect(11, 12, 7, 15);
     });
 
-    texture("bridge", 220, 10, () => {\n      g.fillStyle(0x5b4938); g.fillRect(0, 2, 220, 6);\n      g.fillStyle(0x80654b); g.fillRect(0, 0, 220, 2);\n      for (let x = 8; x < 220; x += 18) { g.fillStyle(0x3d3128); g.fillRect(x, 2, 3, 6); }\n    });\n\n    texture("stump", 18, 12, () => {\n      g.fillStyle(0x4b3026); g.fillRect(5, 4, 8, 8);\n      g.fillStyle(0xa4774e); g.fillRect(7, 4, 4, 2);\n      g.fillStyle(0x33231d); g.fillRect(8, 6, 2, 3);\n    });\n\n    texture("river", 220, 18, () => {
+    texture("bridge", 220, 10, () => {
+      g.fillStyle(0x5b4938); g.fillRect(0, 2, 220, 6);
+      g.fillStyle(0x80654b); g.fillRect(0, 0, 220, 2);
+      for (let x = 8; x < 220; x += 18) { g.fillStyle(0x3d3128); g.fillRect(x, 2, 3, 6); }
+    });
+
+    texture("stump", 18, 12, () => {
+      g.fillStyle(0x4b3026); g.fillRect(5, 4, 8, 8);
+      g.fillStyle(0xa4774e); g.fillRect(7, 4, 4, 2);
+      g.fillStyle(0x33231d); g.fillRect(8, 6, 2, 3);
+    });
+
+    texture("river", 220, 18, () => {
       g.fillStyle(0x315a67); g.fillRect(0, 0, 220, 18);
       g.fillStyle(0x5d8990); g.fillRect(0, 3, 48, 2); g.fillRect(86, 9, 54, 2); g.fillRect(158, 4, 41, 2);
       g.fillStyle(0x21434f); g.fillRect(25, 13, 36, 2); g.fillRect(146, 14, 44, 2);
@@ -211,6 +223,7 @@ export class GameScene extends Phaser.Scene {
     this.creatures = this.physics.add.group({ allowGravity: true });
 
     for (let x = 0; x < WORLD_W; x += 32) {
+      if (x + 16 >= 3700 && x + 16 <= 4180) continue;
       const y = GROUND_Y + Math.floor(this.noise(x * 0.015) * 5);
       const ground = this.platforms.create(x + 16, y + 22, "ground") as Phaser.Physics.Arcade.Sprite;
       ground.setDisplaySize(32, 44);
