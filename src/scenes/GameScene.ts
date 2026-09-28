@@ -494,14 +494,12 @@ export class GameScene extends Phaser.Scene {
   private enterHouse() {
     if (this.inHouse) return;
     this.outsideX = this.player.x;
-    this.inHouse = true;
-    this.currentZone = "DŮM";
-    this.player.setPosition(9480, 116);
-    this.player.setVelocity(0, 0);
-    this.cameras.main.setBounds(9000, 0, 600, WORLD_H);
-    for (const obj of this.houseObjects) obj.setVisible(true);
-    this.showMessage("DOMOV • UVNITŘ JSI V BEZPEČÍ.", 2200);
+    this.inHouse = false;
     this.saveGame();
+    this.scene.start("InteriorScene", {
+      locationId: "house_01",
+      outsideX: this.outsideX
+    });
   }
 
   private exitHouse() {
@@ -1014,7 +1012,7 @@ export class GameScene extends Phaser.Scene {
       clueFound: this.clueFound,
       playerX: this.player.x,
       playerY: this.player.y,
-      inHouse: this.inHouse,
+      inHouse: false,
       outsideX: this.outsideX
     };
     try {
@@ -1041,9 +1039,10 @@ export class GameScene extends Phaser.Scene {
       this.pickaxe = state.pickaxe === true;
       this.torch = state.torch === true;
       this.clueFound = state.clueFound === true;
-      this.inHouse = state.inHouse === true;
+      this.inHouse = false;
       this.outsideX = Number.isFinite(state.outsideX) ? state.outsideX : 158;
       if (Number.isFinite(state.playerX)) this.player.x = Phaser.Math.Clamp(state.playerX, 158, WORLD_W - 20);
+      if (Number.isFinite(state.outsideX)) this.outsideX = Phaser.Math.Clamp(state.outsideX, HOUSE.right + 12, WORLD_W - 20);
       if (Number.isFinite(state.playerY)) this.player.y = Phaser.Math.Clamp(state.playerY, 40, GROUND_Y);
     } catch {}
   }
