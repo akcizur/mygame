@@ -32,6 +32,14 @@ export const LOCATIONS: Record<string, WorldLocation> = {
     width: 620,
     palette: { wall: 0x59463a, floor: 0x73543d, accent: 0x8db1ad },
     returnX: 345
+  },
+  cabin_01: {
+    id: "cabin_01",
+    kind: "interior",
+    title: "SAMOTÁŘSKÁ CHATA • DEN 24",
+    width: 520,
+    palette: { wall: 0x3f332c, floor: 0x5b4637, accent: 0x8f7658 },
+    returnX: 4760
   }
 };
 
