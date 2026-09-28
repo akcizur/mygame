@@ -30,6 +30,6 @@ Hlavní smyčka:
 
 `dům → výprava → sběr / objev → návrat → deník → spánek → další den`
 
-Deník ukládá vlastní poznámky i automatické záznamy významných objevů do localStorage, takže zůstávají i po obnovení stránky.
+Deník ukládá vlastní poznámky i automatické záznamy významných objevů do localStorage, takže zůstávají i po obnovení stránky. Inventář je dostupný přes `I` i mobilní tlačítko `INV`; sebrané suroviny se ukládají jako persistentní stav světa.
 
 Detailní návrh světa a další roadmapa je v [docs/GAMEPLAY.md](docs/GAMEPLAY.md).
