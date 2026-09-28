@@ -88,7 +88,8 @@ Priorita je zachovat jednoduchou smyčku: **dům → výprava → objev → den�
 - [x] Deník s vlastními zápisy
 - [x] Automatické zápisy objevů
 - [x] Persistentní save pozice, zdrojů a objevů
-- [ ] Inventář UI
+- [x] Inventář UI + mobilní tlačítko
+- [x] Sběr surovin se zachováním stavu po reloadu
 - [ ] Nástroje
 - [ ] Crafting
 - [ ] Interiér domu jako skutečná samostatná lokace
@@ -97,6 +98,23 @@ Priorita je zachovat jednoduchou smyčku: **dům → výprava → objev → den�
 - [ ] Počasí
 - [ ] Více biomů a procedurálních událostí
 - [ ] Save sloty
+
+## Aktuální herní stav
+
+Inventář je nyní první samostatná vrstva nad survival systémem. Klávesa `I` nebo tlačítko `INV` otevře panel se zásobami. Sebrané suroviny mají stabilní ID, takže po obnovení stránky nezmizí stav světa.
+
+Další krok není přidávat desítky systémů, ale dát zásobám účel: **nástroj → přístup k novému zdroji → crafting → rozšíření domu → příběhová stopa**.
+
+```mermaid
+flowchart LR
+    GATHER["SBĚR"] --> INV["INVENTÁŘ"]
+    INV --> TOOL["NÁSTROJ"]
+    TOOL --> ACCESS["NOVÁ OBLAST / ZDROJ"]
+    ACCESS --> CRAFT["CRAFTING"]
+    CRAFT --> HOME["DŮM"]
+    HOME --> STORY["STORY STOPA"]
+    STORY --> EXPEDITION["DALŠÍ VÝPRAVA"]
+```
 
 ## Designové pravidlo
 
