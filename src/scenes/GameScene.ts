@@ -6,7 +6,7 @@ const WORLD_H = 180;
 const GROUND_Y = 142;
 const HOUSE = { left: 72, right: 345 };
 
-type DiaryEntry = {
+type WorldEdit = { id: string; type: "campfire" | "wall" | "bridge" | "stump"; x: number; y: number; width?: number };\n\ntype DiaryEntry = {
   day: number;
   text: string;
   createdAt: string;
@@ -188,7 +188,7 @@ export class GameScene extends Phaser.Scene {
       g.fillStyle(0x2e3637); g.fillRect(11, 12, 7, 15);
     });
 
-    texture("river", 220, 18, () => {
+    texture("bridge", 220, 10, () => {\n      g.fillStyle(0x5b4938); g.fillRect(0, 2, 220, 6);\n      g.fillStyle(0x80654b); g.fillRect(0, 0, 220, 2);\n      for (let x = 8; x < 220; x += 18) { g.fillStyle(0x3d3128); g.fillRect(x, 2, 3, 6); }\n    });\n\n    texture("stump", 18, 12, () => {\n      g.fillStyle(0x4b3026); g.fillRect(5, 4, 8, 8);\n      g.fillStyle(0xa4774e); g.fillRect(7, 4, 4, 2);\n      g.fillStyle(0x33231d); g.fillRect(8, 6, 2, 3);\n    });\n\n    texture("river", 220, 18, () => {
       g.fillStyle(0x315a67); g.fillRect(0, 0, 220, 18);
       g.fillStyle(0x5d8990); g.fillRect(0, 3, 48, 2); g.fillRect(86, 9, 54, 2); g.fillRect(158, 4, 41, 2);
       g.fillStyle(0x21434f); g.fillRect(25, 13, 36, 2); g.fillRect(146, 14, 44, 2);
@@ -530,7 +530,7 @@ export class GameScene extends Phaser.Scene {
     if (!body) return;
     body.innerHTML = "";
     const summary = document.createElement("div");
-    summary.innerHTML = "WOOD <b>" + this.wood + "</b> &nbsp; BOBULE <b>" + this.berries + "</b> &nbsp; KÁMEN <b>" + this.stone + "</b>";
+    summary.innerHTML = "WOOD <b>" + this.wood + "</b> &nbsp; BOBULE <b>" + this.berries + "</b> &nbsp; KÁMEN <b>" + this.stone + "</b><br><span style=\"font-size:9px;color:#7f8d91\">TRUHLA: " + this.storedWood + " dřeva • " + this.storedBerries + " bobulí • " + this.storedStone + " kamene</span>";
     summary.style.cssText = "padding-bottom:8px;";
     body.appendChild(summary);
 
@@ -727,7 +727,7 @@ export class GameScene extends Phaser.Scene {
       if (Math.abs(this.player.x - 9480) < 44) { this.exitHouse(); return; }
       if (Math.abs(this.player.x - 9250) < 44 && Math.abs(this.player.y - 116) < 28) { this.openDiary(); return; }
       if (Math.abs(this.player.x - 9020) < 44 && Math.abs(this.player.y - 116) < 28) { this.sleepAtHome(); return; }
-      if (Math.abs(this.player.x - 9360) < 44 && Math.abs(this.player.y - 116) < 28) { this.showMessage("PRACOVNÍ STŮL • CRAFTING JE PŘIPRAVEN.", 1600); return; }
+      if (Math.abs(this.player.x - 9360) < 44 && Math.abs(this.player.y - 116) < 28) { this.showMessage("PRACOVNÍ STŮL • CRAFTING JE PŘIPRAVEN.", 1600); return; }\n      if (Math.abs(this.player.x - 9440) < 44 && Math.abs(this.player.y - 116) < 28) { this.useChest(this.keys.shift.isDown); return; }
       return;
     }
 
@@ -819,8 +819,18 @@ export class GameScene extends Phaser.Scene {
   }
 
   private buildAtPlayer() {
-    if (this.inventoryOpen || this.diaryOpen) return;
-    if (this.wood < 2 || this.stone < 1) return this.showMessage("STAVBA • POTŘEBUJEŠ 2 DŘEVA + 1 KÁMEN.", 1700);
+    if (this.inventoryOpen || this.diaryOpen || this.inHouse) return;
+    const nearRiver = this.player.x > 3650 && this.player.x < 4250;
+    if (nearRiver) {
+      if (this.worldEdits.some(e => e.type === "bridge")) return this.showMessage("MOST UŽ JE OPRAVENÝ.", 1400);
+      if (this.wood < 12 || this.stone < 4) return this.showMessage("MOST • 12 DŘEVA + 4 KAMENE.", 1800);
+      this.wood -= 12; this.stone -= 4;
+      this.createBridgeEdit();
+      this.saveGame(); this.saveWorldEdits();
+      this.showMessage("MOST OPRAVEN • ŘEKA JE PRŮCHOZÍ.", 2600);
+      return;
+    }
+    if (this.wood < 2 || this.stone < 1) return this.showMessage("STAVBA • 2 DŘEVA + 1 KÁMEN.", 1700);
     const x = Math.round((this.player.x + this.facing * 24) / 16) * 16;
     const y = GROUND_Y - 12;
     const id = "wall-" + x + "-" + y;
@@ -828,9 +838,33 @@ export class GameScene extends Phaser.Scene {
     this.wood -= 2; this.stone -= 1;
     this.worldEdits.push({ id, type: "wall", x, y });
     this.add.image(x, y, "house-wall").setScale(0.22).setDepth(2).setName(id);
+    this.saveGame(); this.saveWorldEdits();
+    this.showMessage("POSTAVENO • 2 DŘEVA + 1 KÁMEN", 1800);
+  }
+
+  private createBridgeEdit() {
+    const id = "bridge-river";
+    const x = 3940, y = GROUND_Y - 2;
+    const bridge = this.platforms.create(x, y + 6, "bridge") as Phaser.Physics.Arcade.Sprite;
+    bridge.setDisplaySize(440, 10).refreshBody();
+    bridge.setDepth(1).setName(id);
+    this.worldEdits.push({ id, type: "bridge", x, y, width: 440 });
+  }
+
+  private useChest(withdraw: boolean) {
+    if (withdraw) {
+      if (!this.storedWood && !this.storedBerries && !this.storedStone) return this.showMessage("TRUHLA JE PRÁZDNÁ.", 1400);
+      this.wood += this.storedWood; this.berries += this.storedBerries; this.stone += this.storedStone;
+      this.storedWood = 0; this.storedBerries = 0; this.storedStone = 0;
+      this.showMessage("TRUHLA • VYBRÁNO VŠE.", 1600);
+    } else {
+      if (!this.wood && !this.berries && !this.stone) return this.showMessage("NEMÁŠ CO ULOŽIT.", 1300);
+      this.storedWood += this.wood; this.storedBerries += this.berries; this.storedStone += this.stone;
+      this.wood = 0; this.berries = 0; this.stone = 0;
+      this.showMessage("TRUHLA • ZÁSOBY ULOŽENY. SHIFT+E = VYBRAT.", 1900);
+    }
     this.saveGame();
-    this.saveWorldEdits();
-    this.showMessage("POSTAVENO • B • 2 DŘEVA + 1 KÁMEN", 1800);
+    this.updateInventoryBody();
   }
 
   private removeWorldEdit() {
@@ -849,7 +883,13 @@ export class GameScene extends Phaser.Scene {
   private applyWorldEdits() {
     for (const edit of this.worldEdits) {
       if (this.children.getByName(edit.id)) continue;
-      const texture = edit.type === "wall" ? "house-wall" : "campfire";
+      if (edit.type === "bridge") {
+        const bridge = this.platforms.create(edit.x, edit.y + 6, "bridge") as Phaser.Physics.Arcade.Sprite;
+        bridge.setDisplaySize(edit.width ?? 440, 10).refreshBody();
+        bridge.setDepth(1).setName(edit.id);
+        continue;
+      }
+      const texture = edit.type === "wall" ? "house-wall" : edit.type === "stump" ? "stump" : "campfire";
       const obj = this.add.image(edit.x, edit.y, texture).setDepth(2).setName(edit.id);
       if (edit.type === "wall") obj.setScale(0.22);
     }
@@ -959,8 +999,7 @@ export class GameScene extends Phaser.Scene {
       playerX: this.player.x,
       playerY: this.player.y,
       inHouse: this.inHouse,
-      outsideX: this.outsideX,
- this.player.y
+      outsideX: this.outsideX
     };
     try {
       localStorage.setItem(this.saveKey, JSON.stringify(state));
