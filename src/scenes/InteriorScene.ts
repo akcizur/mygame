@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { createPixelTexture, drawYear24Survivor } from "../render/pixelArt";
 import { getLocation } from "../world/world";
 
 type InteriorData = {
@@ -95,17 +96,7 @@ export class InteriorScene extends Phaser.Scene {
     g.generateTexture("interior-floor", 32, 8);
     g.clear();
 
-    // Canonical YEAR 24 survivor: hard pixels, right-facing silhouette.
-    g.fillStyle(0x172027); g.fillRect(2, 0, 8, 7);
-    g.fillStyle(0x5f4938); g.fillRect(2, 2, 2, 5); // grey-temple hair
-    g.fillStyle(0xd0a477); g.fillRect(4, 1, 5, 5);
-    g.fillStyle(0x3b2a25); g.fillRect(4, 6, 7, 4); // braided beard
-    g.fillStyle(0x354c3e); g.fillRect(2, 8, 8, 7); // military jacket
-    g.fillStyle(0x53664d); g.fillRect(8, 9, 3, 5); // pack/shoulder
-    g.fillStyle(0x6a543b); g.fillRect(2, 15, 8, 2); // cargo belt
-    g.fillStyle(0x26313a); g.fillRect(2, 17, 3, 3); g.fillRect(7, 17, 3, 3); // boots
-    g.fillStyle(0xe0c08c); g.fillRect(10, 9, 2, 3); // right hand
-    g.generateTexture("interior-player", 12, 20);
+    createPixelTexture(this, "interior-player", 12, 20, drawYear24Survivor);
     g.destroy();
 
   }
