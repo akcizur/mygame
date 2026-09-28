@@ -25,3 +25,44 @@ export function drawYear24Survivor(g: Phaser.GameObjects.Graphics) {
   g.fillStyle(YEAR24.boots); g.fillRect(2, 17, 3, 3); g.fillRect(7, 17, 3, 3);
   g.fillStyle(YEAR24.hand); g.fillRect(10, 9, 2, 3);
 }
+
+export function drawPixelTile(g: Phaser.GameObjects.Graphics, kind: "grass" | "wood" | "concrete" | "metal" | "vine" | "debris") {
+  if (kind === "grass") {
+    g.fillStyle(YEAR24.grassDark); g.fillRect(0, 0, 32, 4);
+    g.fillStyle(YEAR24.grass); g.fillRect(0, 4, 32, 28);
+    g.fillStyle(YEAR24.vine); g.fillRect(4, 9, 3, 3); g.fillRect(20, 17, 4, 3); g.fillRect(11, 25, 3, 4);
+    return;
+  }
+  if (kind === "wood") {
+    g.fillStyle(YEAR24.wood); g.fillRect(0, 0, 32, 32);
+    g.fillStyle(YEAR24.woodLight); g.fillRect(0, 2, 32, 3); g.fillRect(8, 12, 18, 2);
+    g.fillStyle(YEAR24.dirt); g.fillRect(5, 23, 3, 7); g.fillRect(24, 7, 3, 8);
+    return;
+  }
+  if (kind === "concrete") {
+    g.fillStyle(YEAR24.concrete); g.fillRect(0, 0, 32, 32);
+    g.fillStyle(0x68716f); g.fillRect(3, 4, 9, 3); g.fillRect(18, 20, 7, 3);
+    g.fillStyle(0x3c4546); g.fillRect(13, 12, 4, 4); g.fillRect(27, 7, 3, 11);
+    return;
+  }
+  if (kind === "metal") {
+    g.fillStyle(0x3f4849); g.fillRect(0, 0, 32, 32);
+    g.fillStyle(0x69706c); g.fillRect(3, 4, 26, 3);
+    g.fillStyle(YEAR24.rust); g.fillRect(8, 9, 4, 15); g.fillRect(21, 19, 7, 4);
+    return;
+  }
+  if (kind === "vine") {
+    g.fillStyle(YEAR24.vine); g.fillRect(3, 0, 3, 32);
+    g.fillRect(6, 8, 8, 3); g.fillRect(11, 11, 3, 12);
+    g.fillRect(14, 20, 9, 3); g.fillRect(20, 22, 3, 7);
+    return;
+  }
+  g.fillStyle(0x303837); g.fillRect(2, 18, 28, 8);
+  g.fillStyle(YEAR24.concrete); g.fillRect(5, 14, 8, 7); g.fillRect(19, 10, 10, 9);
+  g.fillStyle(YEAR24.rust); g.fillRect(14, 22, 5, 4);
+}
+
+export function registerYear24Tiles(scene: Phaser.Scene) {
+  const kinds: Array<"grass" | "wood" | "concrete" | "metal" | "vine" | "debris"> = ["grass", "wood", "concrete", "metal", "vine", "debris"];
+  for (const kind of kinds) createPixelTexture(scene, `tile-${kind}`, 32, 32, g => drawPixelTile(g, kind));
+}
