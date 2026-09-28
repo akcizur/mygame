@@ -52,6 +52,7 @@ export class GameScene extends Phaser.Scene {
     this.createWorld();
     this.createPlayer();
     this.loadGame();
+    this.applyCollectedResources();
     this.createHUD();
     this.createTouchControls();
     this.createDiaryUI();
@@ -249,6 +250,15 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.creatures, this.platforms);
   }
 
+  private applyCollectedResources() {
+    this.resources.children.each(obj => {
+      const resource = obj as Phaser.Physics.Arcade.Sprite;
+      const id = resource.getData("id") as string;
+      if (id && this.collectedResources.has(id)) resource.destroy();
+      return true;
+    });
+  }
+
   private spawnResource(x: number, y: number, texture: string, type: string, amount: number) {
     const id = type + "-" + Math.round(x * 10);
     if (this.collectedResources.has(id)) return;
@@ -316,8 +326,8 @@ export class GameScene extends Phaser.Scene {
       return { c, box };
     };
 
-    const l = button("◀"), r = button("▶"), j = button("▲"), a = button("E");
-    this.ui.add([l.c, r.c, j.c, a.c]);
+    const l = button("◀"), r = button("▶"), j = button("▲"), a = button("E"), inv = button("INV");
+    this.ui.add([l.c, r.c, j.c, a.c, inv.c]);
 
     const bind = (box: Phaser.GameObjects.Rectangle, key: string) => {
       box.on("pointerdown", () => this.player.setData(key, true));
@@ -327,6 +337,7 @@ export class GameScene extends Phaser.Scene {
     };
 
     bind(l.box, "left"); bind(r.box, "right"); bind(j.box, "jump"); bind(a.box, "action");
+    inv.box.on("pointerdown", () => this.toggleInventory());
   }
 
   private createDiaryUI() {
@@ -806,6 +817,7 @@ export class GameScene extends Phaser.Scene {
     find("▶")?.setPosition(58, 145);
     find("▲")?.setPosition(258, 145);
     find("E")?.setPosition(306, 145);
+    find("INV")?.setPosition(162, 145);
   }
 
   private noise(x: number) {
