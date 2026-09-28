@@ -219,6 +219,7 @@ export class GameScene extends Phaser.Scene {
     sky.fillStyle(0x243b3d); sky.fillRect(0, 94, WORLD_W, 48);
 
     this.drawDistantHills();
+    this.drawYear24Landscape();
 
     this.platforms = this.physics.add.staticGroup();
     this.resources = this.physics.add.staticGroup();
@@ -300,6 +301,99 @@ export class GameScene extends Phaser.Scene {
     resource.setData("id", id);
     resource.setData("resource", type);
     resource.setData("amount", amount);
+  }
+
+  private drawYear24Landscape() {
+    const bg = this.add.graphics().setDepth(-13);
+
+    // MEADOWS: low fences, grass clusters and isolated dead trees.
+    bg.lineStyle(1, 0x59634f, 0.8);
+    for (let x = 520; x < 1900; x += 96) {
+      const y = 126 + Math.floor(this.noise(x * 0.31) * 3);
+      bg.lineBetween(x, y - 10, x, y);
+      bg.lineBetween(x + 24, y - 10, x + 24, y);
+      bg.lineBetween(x, y - 7, x + 24, y - 7);
+    }
+
+    // FOREST: dense trunks and layered canopy silhouettes.
+    for (let x = 1950; x < 3660; x += 72) {
+      const y = 82 + Math.floor(this.noise(x * 0.17) * 8);
+      bg.fillStyle(0x294337);
+      bg.fillRect(x, y + 18, 5, 48);
+      bg.fillTriangle(x - 16, y + 30, x + 2, y - 4, x + 20, y + 30);
+      bg.fillTriangle(x - 13, y + 43, x + 2, y + 12, x + 17, y + 43);
+      if (this.noise(x * 0.4) > 0.25) {
+        bg.lineStyle(2, 0x59634f, 0.75);
+        bg.lineBetween(x + 8, y + 12, x + 18, y + 42);
+      }
+    }
+
+    // RIVER BANK: reeds and broken concrete fragments around the crossing.
+    bg.fillStyle(0x6d7958);
+    for (let x = 3650; x < 4250; x += 28) {
+      const y = 129 + Math.floor(this.noise(x) * 4);
+      bg.fillRect(x, y - 9, 2, 10);
+      bg.fillRect(x + 5, y - 13, 2, 14);
+    }
+    bg.fillStyle(0x536066);
+    bg.fillRect(3570, 130, 74, 8);
+    bg.fillRect(4230, 130, 80, 8);
+
+    // RIDGE: dark pines and exposed rock.
+    for (let x = 5000; x < 6900; x += 92) {
+      const y = 78 + Math.floor(this.noise(x * 0.11) * 9);
+      bg.fillStyle(0x263838);
+      bg.fillTriangle(x - 18, 126, x + 2, y - 30, x + 22, 126);
+      bg.fillStyle(0x66706e);
+      if (this.noise(x * 0.7) > 0.35) bg.fillRect(x + 18, 119, 24, 7);
+    }
+
+    // RUINS / CITY EDGE: skeletal structures, poles and collapsed walls.
+    for (let x = 6900; x < 9000; x += 150) {
+      const h = 24 + Math.floor((this.noise(x * 0.23) + 1) * 18);
+      bg.fillStyle(0x4b5555);
+      bg.fillRect(x, 126 - h, 7, h);
+      bg.fillRect(x + 38, 126 - Math.max(18, h - 8), 7, Math.max(18, h - 8));
+      bg.fillRect(x, 126 - h, 45, 5);
+      if (this.noise(x * 0.51) > 0) {
+        bg.fillStyle(0x7c543d);
+        bg.fillRect(x + 12, 126 - h + 8, 12, 3);
+      }
+    }
+
+    // OVERGROWTH across the whole reclaimed world.
+    const foreground = this.add.graphics().setDepth(4);
+    foreground.lineStyle(1, 0x58734f, 0.8);
+    for (let x = 380; x < WORLD_W - 40; x += 34) {
+      if (x > 3700 && x < 4180) continue;
+      const y = GROUND_Y + 1 + Math.floor(this.noise(x * 0.8) * 2);
+      foreground.lineBetween(x, y, x - 3, y - 9);
+      if (this.noise(x * 1.7) > 0.35) foreground.lineBetween(x + 2, y, x + 6, y - 7);
+    }
+
+    // Landmark silhouettes make the outdoor world read as one continuous landscape.
+    const tower = this.add.graphics().setDepth(-3);
+    tower.lineStyle(2, 0x505b5b, 0.9);
+    tower.lineBetween(6050, 122, 6050, 48);
+    tower.lineBetween(6080, 122, 6080, 48);
+    tower.lineBetween(6050, 62, 6080, 62);
+    tower.lineBetween(6050, 82, 6080, 82);
+    tower.lineBetween(6050, 48, 6080, 48);
+    tower.lineStyle(1, 0x727c78, 0.7);
+    tower.lineBetween(6065, 48, 6110, 35);
+    tower.lineBetween(6065, 48, 6022, 34);
+
+    const city = this.add.graphics().setDepth(-4);
+    city.fillStyle(0x364246);
+    city.fillRect(7350, 78, 70, 48);
+    city.fillRect(7440, 58, 42, 68);
+    city.fillRect(7500, 92, 88, 34);
+    city.fillRect(7620, 70, 58, 56);
+    city.fillStyle(0x59645f);
+    city.fillRect(7450, 68, 6, 4);
+    city.fillRect(7465, 68, 6, 4);
+    city.fillRect(7520, 102, 8, 4);
+    city.fillRect(7538, 102, 8, 4);
   }
 
   private drawDistantHills() {
