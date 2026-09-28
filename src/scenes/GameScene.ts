@@ -35,9 +35,12 @@ export class GameScene extends Phaser.Scene {
   private facing = 1;
   private actionCooldown = 0;
   private invulnerable = 0;
-  private seed = Math.random() * 10000;
+  private seed = 4729.17;
   private currentZone = "DŮM";
   private discoveries = new Set<string>();
+  private collectedResources = new Set<string>();
+  private inventoryOpen = false;
+  private inventoryOverlay?: HTMLDivElement;
   private diaryOpen = false;
   private diaryOverlay?: HTMLDivElement;
   private diaryTextarea?: HTMLTextAreaElement;
@@ -52,6 +55,7 @@ export class GameScene extends Phaser.Scene {
     this.createHUD();
     this.createTouchControls();
     this.createDiaryUI();
+    this.createInventoryUI();
 
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.keys = {
@@ -59,6 +63,7 @@ export class GameScene extends Phaser.Scene {
       d: this.input.keyboard!.addKey("D"),
       w: this.input.keyboard!.addKey("W"),
       space: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
+      i: this.input.keyboard!.addKey("I"),
       e: this.input.keyboard!.addKey("E"),
       shift: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT)
     };
@@ -69,7 +74,7 @@ export class GameScene extends Phaser.Scene {
     this.showMessage("DEN " + (this.day + 1) + " • JSI DOMA. PROZKOUMEJ OKOLÍ A VEČER SE VRAŤ.", 5200);
 
     this.scale.on("resize", this.layoutUI, this);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.diaryOverlay?.remove());
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => { this.diaryOverlay?.remove(); this.inventoryOverlay?.remove(); });
     this.layoutUI();
   }
 
@@ -220,14 +225,11 @@ export class GameScene extends Phaser.Scene {
       const zoneX = x;
       if (zoneX > 3500 && zoneX < 4400) continue;
       if (n > 0.35) {
-        const tree = this.resources.create(x, GROUND_Y - 16, "tree") as Phaser.Physics.Arcade.Sprite;
-        tree.setData("resource", "wood"); tree.setData("amount", 3);
+        this.spawnResource(x, GROUND_Y - 16, "tree", "wood", 3);
       } else if (n < -0.12) {
-        const berry = this.resources.create(x + 20, GROUND_Y - 8, "berry") as Phaser.Physics.Arcade.Sprite;
-        berry.setData("resource", "berry"); berry.setData("amount", 2);
+        this.spawnResource(x + 20, GROUND_Y - 8, "berry", "berry", 2);
       } else {
-        const rock = this.resources.create(x + 35, GROUND_Y - 5, "rock") as Phaser.Physics.Arcade.Sprite;
-        rock.setData("resource", "stone"); rock.setData("amount", 2);
+        this.spawnResource(x + 35, GROUND_Y - 5, "rock", "stone", 2);
       }
     }
 
@@ -245,6 +247,15 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.physics.add.collider(this.creatures, this.platforms);
+  }
+
+  private spawnResource(x: number, y: number, texture: string, type: string, amount: number) {
+    const id = type + "-" + Math.round(x * 10);
+    if (this.collectedResources.has(id)) return;
+    const resource = this.resources.create(x, y, texture) as Phaser.Physics.Arcade.Sprite;
+    resource.setData("id", id);
+    resource.setData("resource", type);
+    resource.setData("amount", amount);
   }
 
   private drawDistantHills() {
@@ -379,6 +390,53 @@ export class GameScene extends Phaser.Scene {
     this.diaryList = list;
   }
 
+  private createInventoryUI() {
+    const root = document.createElement("div");
+    root.id = "wildlands-inventory";
+    Object.assign(root.style, {
+      position: "fixed", inset: "0", display: "none", alignItems: "flex-end", justifyContent: "center",
+      padding: "14px", boxSizing: "border-box", background: "rgba(6,10,12,.45)", zIndex: "9998",
+      fontFamily: "monospace", color: "#e6eee8", touchAction: "auto"
+    });
+    const card = document.createElement("div");
+    Object.assign(card.style, {
+      width: "min(520px, 100%)", boxSizing: "border-box", border: "1px solid #52636a",
+      background: "#0d1418", padding: "14px", boxShadow: "0 12px 40px rgba(0,0,0,.45)"
+    });
+    const title = document.createElement("div");
+    title.textContent = "VÝBAVA";
+    title.style.cssText = "font-size:14px;letter-spacing:.14em;margin-bottom:10px;";
+    const body = document.createElement("div");
+    body.id = "wildlands-inventory-body";
+    body.style.cssText = "font-size:12px;line-height:1.8;color:#cbd4d4;";
+    const hint = document.createElement("div");
+    hint.textContent = "I / klepnutí na VÝBAVA — zavřít";
+    hint.style.cssText = "margin-top:8px;font-size:9px;color:#7f8d91;";
+    card.append(title, body, hint);
+    root.appendChild(card);
+    document.body.appendChild(root);
+    root.onclick = (event) => { if (event.target === root) this.closeInventory(); };
+    this.inventoryOverlay = root;
+  }
+
+  private toggleInventory() {
+    if (this.inventoryOpen) this.closeInventory(); else this.openInventory();
+  }
+
+  private openInventory() {
+    if (!this.inventoryOverlay) return;
+    this.inventoryOpen = true;
+    this.player.setVelocity(0, 0);
+    this.inventoryOverlay.style.display = "flex";
+    const body = this.inventoryOverlay.querySelector("#wildlands-inventory-body");
+    if (body) body.innerHTML = "<div>WOOD &nbsp; " + this.wood + "</div><div>BOBULE &nbsp; " + this.berries + "</div><div>KÁMEN &nbsp; " + this.stone + "</div><div style='margin-top:8px;color:#d6c78b'>NÁSTROJE &nbsp; zatím žádné</div><div>CRAFTING &nbsp; odemkne pracovní stůl</div>";
+  }
+
+  private closeInventory() {
+    this.inventoryOpen = false;
+    if (this.inventoryOverlay) this.inventoryOverlay.style.display = "none";
+  }
+
   private openDiary() {
     if (!this.diaryOverlay || !this.diaryTextarea) return;
     this.diaryOpen = true;
@@ -446,7 +504,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number) {
-    if (this.diaryOpen) {
+    if (this.diaryOpen || this.inventoryOpen) {
       this.player.setVelocity(0, 0);
       this.updateHUD();
       return;
@@ -486,6 +544,8 @@ export class GameScene extends Phaser.Scene {
       this.player.setVelocityY(-300);
       this.player.setData("jump", false);
     }
+
+    if (Phaser.Input.Keyboard.JustDown(this.keys.i)) this.toggleInventory();
 
     if (Phaser.Input.Keyboard.JustDown(this.keys.e) || this.player.getData("action")) {
       this.player.setData("action", false);
@@ -553,7 +613,10 @@ export class GameScene extends Phaser.Scene {
       if (type === "wood") this.wood += amount;
       if (type === "berry") this.berries += amount;
       if (type === "stone") this.stone += amount;
+      const resourceId = r.getData("id") as string;
+      if (resourceId) this.collectedResources.add(resourceId);
       r.destroy();
+      this.saveGame();
       this.showMessage("+" + amount + " " + type.toUpperCase(), 1200);
       return;
     }
@@ -654,6 +717,7 @@ export class GameScene extends Phaser.Scene {
       berries: this.berries,
       stone: this.stone,
       discoveries: Array.from(this.discoveries),
+      collectedResources: Array.from(this.collectedResources),
       playerX: this.player.x,
       playerY: this.player.y
     };
@@ -676,6 +740,7 @@ export class GameScene extends Phaser.Scene {
       this.berries = Number.isFinite(state.berries) ? state.berries : 0;
       this.stone = Number.isFinite(state.stone) ? state.stone : 0;
       this.discoveries = new Set(Array.isArray(state.discoveries) ? state.discoveries : []);
+      this.collectedResources = new Set(Array.isArray(state.collectedResources) ? state.collectedResources : []);
       if (Number.isFinite(state.playerX)) this.player.x = Phaser.Math.Clamp(state.playerX, 158, WORLD_W - 20);
       if (Number.isFinite(state.playerY)) this.player.y = Phaser.Math.Clamp(state.playerY, 40, GROUND_Y);
     } catch {}
