@@ -220,6 +220,7 @@ export class GameScene extends Phaser.Scene {
 
     this.drawDistantHills();
     this.drawYear24Landscape();
+    this.drawYear24Landmarks();
 
     this.platforms = this.physics.add.staticGroup();
     this.resources = this.physics.add.staticGroup();
@@ -394,6 +395,72 @@ export class GameScene extends Phaser.Scene {
     city.fillRect(7465, 68, 6, 4);
     city.fillRect(7520, 102, 8, 4);
     city.fillRect(7538, 102, 8, 4);
+  }
+
+  private drawYear24Landmarks() {
+    // Forest cabin: the first recognizable explorable landmark in YEAR 24.
+    const cabin = this.add.graphics().setDepth(-2);
+    cabin.fillStyle(0x46372d);
+    cabin.fillRect(1110, 91, 96, 45);
+    cabin.fillTriangle(1098, 91, 1158, 58, 1218, 91);
+    cabin.fillStyle(0x70513d);
+    cabin.fillRect(1120, 100, 76, 36);
+    cabin.fillStyle(0x182126);
+    cabin.fillRect(1152, 111, 15, 25);
+    cabin.fillStyle(0x8a6a4b);
+    cabin.fillRect(1128, 106, 14, 11);
+    cabin.fillStyle(0x9c754d);
+    cabin.fillRect(1178, 106, 12, 10);
+    cabin.lineStyle(2, 0x34463a, 0.9);
+    cabin.lineBetween(1108, 137, 1210, 137);
+    cabin.lineBetween(1112, 137, 1112, 151);
+    cabin.lineBetween(1204, 137, 1204, 151);
+    cabin.fillStyle(0x272322);
+    cabin.fillRect(1186, 68, 8, 23);
+    cabin.fillStyle(0x6d6a5a, 0.45);
+    cabin.fillRect(1188, 59, 4, 10);
+
+    this.add.text(1158, 48, "SAMOTÁŘSKÁ CHATA", {
+      fontFamily: "monospace",
+      fontSize: "6px",
+      color: "#c7b894"
+    }).setOrigin(0.5).setDepth(2);
+
+    // Old camp: low silhouettes rather than another game-like icon.
+    const camp = this.add.graphics().setDepth(-1);
+    camp.fillStyle(0x45382e);
+    camp.fillRect(1390, 126, 56, 5);
+    camp.fillStyle(0x754733);
+    camp.fillTriangle(1398, 126, 1416, 106, 1434, 126);
+    camp.fillStyle(0xb66b3d);
+    camp.fillRect(1413, 119, 5, 7);
+
+    // Broken road toward the ruined city.
+    const road = this.add.graphics().setDepth(-5);
+    road.fillStyle(0x3f4747);
+    road.fillRect(6780, 129, 1260, 10);
+    road.fillStyle(0x6d5a48);
+    for (let x = 6820; x < 8000; x += 96) {
+      road.fillRect(x, 132 + Math.floor(this.noise(x) * 2), 34, 2);
+    }
+    road.fillStyle(0x35473b);
+    for (let x = 6880; x < 7900; x += 70) road.fillRect(x, 122, 4, 10);
+
+    // Gas station silhouette before the urban ruins.
+    const station = this.add.graphics().setDepth(-1);
+    station.fillStyle(0x4a4c48);
+    station.fillRect(7140, 91, 88, 42);
+    station.fillStyle(0x68513f);
+    station.fillRect(7134, 84, 100, 8);
+    station.fillStyle(0x7c5b42);
+    station.fillRect(7150, 99, 22, 12);
+    station.fillRect(7190, 99, 22, 12);
+    station.fillStyle(0x403c36);
+    station.fillRect(7160, 123, 8, 10);
+    station.fillRect(7200, 123, 8, 10);
+    this.add.text(7184, 75, "GAS", {
+      fontFamily: "monospace", fontSize: "6px", color: "#a55d3e"
+    }).setOrigin(0.5).setDepth(2);
   }
 
   private drawDistantHills() {
