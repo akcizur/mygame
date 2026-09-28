@@ -95,8 +95,10 @@ Priorita je zachovat jednoduchou smyčku: **dům → výprava → objev → den�
 - [x] Nástroje
 - [x] Crafting
 - [ ] Interiér domu jako skutečná samostatná lokace
+- [x] Základní úpravy světa (stavění / odstraňování)
+- [ ] Interiér domu jako skutečná samostatná lokace
 - [ ] Rozšíření domu
-- [ ] Příběhové stopy
+- [x] První příběhová stopa v ruinách
 - [ ] Počasí
 - [ ] Více biomů a procedurálních událostí
 - [ ] Save sloty
@@ -123,3 +125,33 @@ flowchart LR
 ## Designové pravidlo
 
 Dům nemá být jen spawn point. Je to místo, kam se hráč vrací, aby **zpracoval zkušenost z výpravy**: přečetl deník, doplnil zásoby, odpočinul si a rozhodl se, kam půjde další den.
+
+## Svět jako stavitelný prostor
+
+Svět není pouze mapa, kterou hráč prochází. Je navržen jako persistentní stav, který se může měnit. Sebrané zdroje zůstávají sebrané a nově přidané objekty se ukládají do `localStorage`.
+
+První vrstva úprav je záměrně jednoduchá:
+
+- `B` — postavit objekt před hráčem
+- `R` — odstranit vlastní objekt v dosahu
+- změna se uloží a přežije reload
+- později lze stejný systém rozšířit na mosty, cesty, ploty, úkryty, pracovní stanice, světla, farmy a další objekty
+
+Architektura má směřovat k modelu **world state → edit → persistence → render**, nikoli k jednorázově nakreslené mapě.
+
+## Dlouhodobý směr
+
+```mermaid
+flowchart TD
+    WORLD["SVĚT"] --> EXPLORE["PROCHÁZENÍ"]
+    EXPLORE --> COLLECT["SBĚR VŠEHO"]
+    COLLECT --> CRAFT["CRAFTING"]
+    CRAFT --> BUILD["STAVĚNÍ"]
+    BUILD --> MODIFY["ÚPRAVA TERÉNU / OBJEKTŮ"]
+    MODIFY --> RETURN["SVĚT SE ZMĚNÍ"]
+    RETURN --> EXPLORE
+    RETURN --> STORY["NOVÉ STOPy / UDÁLOSTI"]
+    STORY --> EXPLORE
+```
+
+Cílem je postupně dostat hru od **„procházím mapu“** k **„žiju ve světě, který po mně zůstává změněný“**.
