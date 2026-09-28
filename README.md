@@ -37,4 +37,4 @@ Detailní návrh světa a další roadmapa je v [docs/GAMEPLAY.md](docs/GAMEPLAY
 
 ## Persistent world
 
-The world is intended to be editable, not static. Collected resources persist, and the first build/remove layer is available with `B` and `R`. This is the foundation for later terrain changes, structures, paths, bridges, shelters and other player-created changes.
+The world is intended to be editable, not static. Collected resources persist, cut trees leave persistent stumps, and player structures survive reloads. `B` builds; `R` removes a nearby player structure. At the river, `B` repairs the bridge for 12 wood + 4 stone. The house chest stores resources persistently; `Shift+E` withdraws them. This is the foundation for later terrain changes, structures, paths, shelters and other player-created changes.
