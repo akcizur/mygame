@@ -660,12 +660,12 @@ export class GameScene extends Phaser.Scene {
 
     this.day++;
     this.clock = 0.27;
-    this.saveGame();
     this.health = Math.min(100, this.health + 32);
     this.hunger = Math.min(100, this.hunger + 38);
     this.stamina = 100;
     this.player.setPosition(158, 116);
     this.player.setVelocity(0, 0);
+    this.saveGame();
     this.showMessage("RÁNO • DEN " + (this.day + 1) + " • DOMA JSI V BEZPEČÍ.", 2600);
   }
 
