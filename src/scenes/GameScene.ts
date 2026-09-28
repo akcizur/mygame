@@ -42,11 +42,13 @@ export class GameScene extends Phaser.Scene {
   private diaryOverlay?: HTMLDivElement;
   private diaryTextarea?: HTMLTextAreaElement;
   private diaryList?: HTMLDivElement;
+  private saveKey = "wildlands-save-v1";
 
   create() {
     this.createTextures();
     this.createWorld();
     this.createPlayer();
+    this.loadGame();
     this.createHUD();
     this.createTouchControls();
     this.createDiaryUI();
@@ -64,7 +66,7 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, WORLD_W, WORLD_H);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
     this.cameras.main.setDeadzone(70, 34);
-    this.showMessage("DEN 1 • JSEM DOMA. PROZKOUMEJ OKOLÍ A VEČER SE VRAŤ.", 5200);
+    this.showMessage("DEN " + (this.day + 1) + " • JSI DOMA. PROZKOUMEJ OKOLÍ A VEČER SE VRAŤ.", 5200);
 
     this.scale.on("resize", this.layoutUI, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.diaryOverlay?.remove());
@@ -410,6 +412,7 @@ export class GameScene extends Phaser.Scene {
       createdAt: new Date().toISOString()
     });
     localStorage.setItem("wildlands-diary-v1", JSON.stringify(entries.slice(-30)));
+    this.saveGame();
     this.showMessage("ZÁPIS ULOŽEN • DEN " + (this.day + 1), 1800);
     this.renderDiaryHistory();
     if (this.diaryTextarea) this.diaryTextarea.value = "";
@@ -454,6 +457,7 @@ export class GameScene extends Phaser.Scene {
     if (this.clock >= 1) {
       this.clock -= 1;
       this.day++;
+      this.saveGame();
       this.showMessage("NOVÝ DEN • ZAPIŠ SI, CO SE ZMĚNILO.", 2800);
     }
 
@@ -582,6 +586,7 @@ export class GameScene extends Phaser.Scene {
 
     this.day++;
     this.clock = 0.27;
+    this.saveGame();
     this.health = Math.min(100, this.health + 32);
     this.hunger = Math.min(100, this.hunger + 38);
     this.stamina = 100;
@@ -614,6 +619,7 @@ export class GameScene extends Phaser.Scene {
     for (const [xPos, name, note] of checks) {
       if (!this.discoveries.has(name) && Math.abs(this.player.x - xPos) < 28) {
         this.discoveries.add(name);
+        this.saveGame();
         this.showMessage("OBJEV: " + name + " • ZAPIŠ SI TO DO DENÍKU", 2600);
         this.storeDiscoveryNote(this.day + 1, note);
       }
@@ -633,7 +639,46 @@ export class GameScene extends Phaser.Scene {
     this.player.setPosition(158, 116);
     this.player.setVelocity(0, 0);
     this.currentZone = "DŮM";
+    this.saveGame();
     this.showMessage("ZKOLABOVAL JSI • PROBOUZÍŠ SE DOMA.", 2400);
+  }
+
+  private saveGame() {
+    const state = {
+      day: this.day,
+      clock: this.clock,
+      health: this.health,
+      hunger: this.hunger,
+      stamina: this.stamina,
+      wood: this.wood,
+      berries: this.berries,
+      stone: this.stone,
+      discoveries: Array.from(this.discoveries),
+      playerX: this.player.x,
+      playerY: this.player.y
+    };
+    try {
+      localStorage.setItem(this.saveKey, JSON.stringify(state));
+    } catch {}
+  }
+
+  private loadGame() {
+    try {
+      const raw = localStorage.getItem(this.saveKey);
+      if (!raw) return;
+      const state = JSON.parse(raw);
+      this.day = Number.isFinite(state.day) ? state.day : 0;
+      this.clock = Number.isFinite(state.clock) ? state.clock : 0.30;
+      this.health = Number.isFinite(state.health) ? state.health : 100;
+      this.hunger = Number.isFinite(state.hunger) ? state.hunger : 100;
+      this.stamina = Number.isFinite(state.stamina) ? state.stamina : 100;
+      this.wood = Number.isFinite(state.wood) ? state.wood : 0;
+      this.berries = Number.isFinite(state.berries) ? state.berries : 0;
+      this.stone = Number.isFinite(state.stone) ? state.stone : 0;
+      this.discoveries = new Set(Array.isArray(state.discoveries) ? state.discoveries : []);
+      if (Number.isFinite(state.playerX)) this.player.x = Phaser.Math.Clamp(state.playerX, 158, WORLD_W - 20);
+      if (Number.isFinite(state.playerY)) this.player.y = Phaser.Math.Clamp(state.playerY, 40, GROUND_Y);
+    } catch {}
   }
 
   private getPhase() {
