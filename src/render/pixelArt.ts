@@ -62,7 +62,29 @@ export function drawPixelTile(g: Phaser.GameObjects.Graphics, kind: "grass" | "w
   g.fillStyle(YEAR24.rust); g.fillRect(14, 22, 5, 4);
 }
 
+export function drawYear24Ground(g: Phaser.GameObjects.Graphics) {
+  drawPixelTile(g, "grass");
+  g.fillStyle(YEAR24.dirt);
+  g.fillRect(0, 32, 32, 12);
+  g.fillStyle(0x203127);
+  g.fillRect(4, 35, 3, 3);
+  g.fillRect(21, 39, 4, 3);
+  g.fillRect(11, 32, 3, 5);
+}
+
+export function drawYear24Floor(g: Phaser.GameObjects.Graphics) {
+  g.fillStyle(YEAR24.wood);
+  g.fillRect(0, 0, 32, 8);
+  g.fillStyle(YEAR24.woodLight);
+  g.fillRect(0, 0, 32, 2);
+  g.fillStyle(YEAR24.dirt);
+  g.fillRect(6, 5, 3, 3);
+  g.fillRect(23, 3, 2, 5);
+}
+
 export function registerYear24Tiles(scene: Phaser.Scene) {
   const kinds: Array<"grass" | "wood" | "concrete" | "metal" | "vine" | "debris"> = ["grass", "wood", "concrete", "metal", "vine", "debris"];
   for (const kind of kinds) createPixelTexture(scene, `tile-${kind}`, 32, 32, g => drawPixelTile(g, kind));
+  createPixelTexture(scene, "tile-ground", 32, 44, drawYear24Ground);
+  createPixelTexture(scene, "tile-floor", 32, 8, drawYear24Floor);
 }
