@@ -92,8 +92,8 @@ export class InteriorScene extends Phaser.Scene {
     registerYear24Tiles(this);
     const g = this.make.graphics({ x: 0, y: 0, add: false });
 
-    g.fillStyle(0x73543d);
-    g.fillRect(0, 0, 32, 8);
+    // Compatibility alias: interior flooring now comes from the shared YEAR 24 floor tile.
+    g.drawImage(this.textures.get("tile-floor").getSourceImage() as HTMLImageElement, 0, 0, 32, 8);
     g.generateTexture("interior-floor", 32, 8);
     g.clear();
 
